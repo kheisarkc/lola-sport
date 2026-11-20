@@ -55,7 +55,7 @@ main() {
   if [ ! -f deploy/vps/.seeded ]; then $C run --rm -T app php artisan db:seed --force --no-interaction && touch deploy/vps/.seeded; fi
   $C up -d --force-recreate app
 
-  for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8011/up && break; sleep 2; done
+  for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8011/up 2>/dev/null && break; sleep 2; done
   curl -fsS -o /dev/null http://127.0.0.1:8011/up || { echo "Aplikasi belum sehat. Lihat: cd $APP && $C logs --tail=50 app" >&2; exit 1; }
 
   echo "== Caddy"

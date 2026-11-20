@@ -13,3 +13,8 @@ COPY deploy/vps/apache.conf /etc/apache2/sites-available/000-default.conf
 RUN printf 'Listen 127.0.0.1:8011\n' > /etc/apache2/ports.conf \
     && printf 'ServerName localhost\n' > /etc/apache2/conf-enabled/servername.conf \
     && printf 'upload_max_filesize=6M\npost_max_size=8M\nmemory_limit=128M\nexpose_php=Off\n' > /usr/local/etc/php/conf.d/lola.ini
+# Produksi: PHP tidak mengecek ulang file tiap request (kode hanya berubah lewat build ulang image).
+RUN printf 'opcache.enable=1\nopcache.validate_timestamps=0\nopcache.memory_consumption=64\nopcache.max_accelerated_files=10000\nrealpath_cache_size=4096K\nrealpath_cache_ttl=600\n' > /usr/local/etc/php/conf.d/opcache-prod.ini
+# Cache konfigurasi, route, event, dan view Laravel saat container mulai (nilai .env baru terbaca di sini),
+# lalu kembalikan kepemilikan ke www-data supaya Apache tetap bisa menulis cache view.
+CMD ["sh", "-c", "php artisan optimize || echo \"optimize gagal, jalan tanpa cache\" >&2; chown -R www-data:www-data bootstrap/cache storage/framework && exec apache2-foreground"]

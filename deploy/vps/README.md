@@ -23,7 +23,7 @@ docker compose --env-file deploy/vps/.env -f deploy/vps/compose.yml up -d app
 ## Berdampingan dengan demo Next.js lama
 
 Versi ini **tidak menggantikan** demo lama. Project Compose `lola-sport-v1`, port 8011/55443, volume, dan cookie sesi sengaja berbeda,
-jadi demo lama (`lola-sport-hosted-demo`, port 3001/8001/55433) tetap jalan. Pakai hostname lain, misalnya `v1.<ip>.sslip.io`.
+jadi demo lama (`lola-sport-hosted-demo`, port 3001/8001/55433) tetap jalan. Pakai hostname lain, misalnya `lolasport.<ip>.sslip.io`.
 Jangan menghentikan atau mengosongkan container dan database demo lama dari folder ini.
 
 ## Operasional

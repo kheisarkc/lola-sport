@@ -5,7 +5,9 @@
 # Tidak menyentuh /opt/lola-sport-demo, project Compose lama, ataupun volumenya.
 set -euo pipefail
 
-HOST=${HOST:-v1.43.173.6.29.sslip.io}
+HOST=${HOST:-lolasport.43.173.6.29.sslip.io}
+# Hostname lama yang diganti otomatis bila masih tercatat di Caddyfile.
+OLD_HOSTS="v1.43.173.6.29.sslip.io"
 APP=/opt/lola-sport-v1
 BACKUPS=/opt/lola-backups
 REPO=https://github.com/kheisarkc/lola-sport/archive/refs/heads/main.tar.gz
@@ -36,21 +38,26 @@ if [ "$FIRST" = "1" ]; then
       -e "s#YOUR-DEMO-HOSTNAME#$HOST#" deploy/vps/.env.example > deploy/vps/.env
   chmod 600 deploy/vps/.env
 fi
+sed -i "s#^APP_URL=.*#APP_URL=https://$HOST#" deploy/vps/.env
 
 echo "== Database, build, migrasi"
 $C up -d db
 $C build app
 $C run --rm app php artisan migrate --force --no-interaction
 if [ "$FIRST" = "1" ]; then $C run --rm app php artisan db:seed --force --no-interaction; fi
-$C up -d app
+$C up -d --force-recreate app
 
 for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8011/up && break; sleep 2; done
 curl -fsS -o /dev/null http://127.0.0.1:8011/up || { echo "Aplikasi belum sehat. Lihat: cd $APP && $C logs --tail=50 app" >&2; exit 1; }
 
 echo "== Caddy"
-if [ -f "$CADDYFILE" ] && ! grep -q "^$HOST" "$CADDYFILE"; then
+if [ -f "$CADDYFILE" ] && ! grep -q "^$HOST " "$CADDYFILE"; then
   cp "$CADDYFILE" "$BACKUPS/Caddyfile-$STAMP"
-  { echo; sed "s#YOUR-DEMO-HOSTNAME#$HOST#" deploy/vps/Caddyfile.example; } >> "$CADDYFILE"
+  RENAMED=0
+  for old in $OLD_HOSTS; do
+    if grep -q "^$old " "$CADDYFILE"; then sed -i "s#^$old #$HOST #" "$CADDYFILE"; RENAMED=1; fi
+  done
+  [ "$RENAMED" = "1" ] || { echo; sed "s#YOUR-DEMO-HOSTNAME#$HOST#" deploy/vps/Caddyfile.example; } >> "$CADDYFILE"
   if caddy validate --config "$CADDYFILE" --adapter caddyfile; then systemctl reload caddy
   else cp "$BACKUPS/Caddyfile-$STAMP" "$CADDYFILE"; echo "Caddyfile tidak valid, dikembalikan." >&2; exit 1; fi
 elif [ ! -f "$CADDYFILE" ]; then

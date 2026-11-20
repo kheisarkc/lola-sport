@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pasang atau perbarui Lola Sport v1 di VPS, berdampingan dengan demo lama.
-#   curl -fsSL https://raw.githubusercontent.com/kheisarkc/lola-sport-v1/main/deploy/vps/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/kheisarkc/lola-sport/main/deploy/vps/install.sh | sudo bash
 # atau, setelah terpasang:  sudo bash /opt/lola-sport-v1/deploy/vps/install.sh
 # Tidak menyentuh /opt/lola-sport-demo, project Compose lama, ataupun volumenya.
 set -euo pipefail
@@ -8,7 +8,7 @@ set -euo pipefail
 HOST=${HOST:-v1.43.173.6.29.sslip.io}
 APP=/opt/lola-sport-v1
 BACKUPS=/opt/lola-backups
-REPO=https://codeload.github.com/kheisarkc/lola-sport-v1/tar.gz/refs/heads/main
+REPO=https://github.com/kheisarkc/lola-sport/archive/refs/heads/main.tar.gz
 CADDYFILE=/etc/caddy/Caddyfile
 STAMP=$(date +%Y%m%d-%H%M%S)
 C="docker compose --env-file deploy/vps/.env -f deploy/vps/compose.yml"

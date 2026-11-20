@@ -1,7 +1,7 @@
 FROM php:8.4-apache@sha256:901b0dbcd2419cc9cd307ea05e57403449ce722ccd5b32335da6e8d39f2b1ee0
 RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libonig-dev unzip \
     && docker-php-ext-install pdo_pgsql mbstring opcache \
-    && a2enmod rewrite \
+    && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac /usr/bin/composer /usr/local/bin/composer
 WORKDIR /var/www/html

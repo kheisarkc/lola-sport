@@ -9,7 +9,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    {{-- ?v= berubah tiap CSS diubah, jadi browser boleh menyimpan CSS lama-lama tanpa tertinggal versi. --}}
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
+    {{-- Halaman tujuan diambil lebih dulu saat link disentuh/ditunjuk, jadi pindah halaman terasa instan. --}}
+    @verbatim
+    <script type="speculationrules">
+    {"prefetch": [{"where": {"and": [
+        {"href_matches": "/*"},
+        {"not": {"href_matches": "/*/unduh"}},
+        {"not": {"selector_matches": ".slot-available, [data-no-prefetch]"}}
+    ]}, "eagerness": "moderate"}]}
+    </script>
+    @endverbatim
 </head>
 <body @class(['is-panel' => auth()->check(), 'has-bottom-nav' => auth()->check(), 'is-staff' => auth()->user()?->isStaff(), 'is-owner' => auth()->user()?->isOwner()])>
 <header @class(['topbar', 'topbar-public' => ! auth()->check()])>

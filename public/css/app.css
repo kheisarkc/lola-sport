@@ -1222,8 +1222,3 @@ fieldset.field legend .hint { display: block; font-weight: 400; }
     .period-form { grid-template-columns: 1fr 1fr auto; }
     .period-form .btn { grid-column: auto; }
 }
-
-/* Pindah halaman tanpa kedip putih (browser yang mendukung). */
-@media (prefers-reduced-motion: no-preference) {
-    @view-transition { navigation: auto; }
-}

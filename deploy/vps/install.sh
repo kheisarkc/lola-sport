@@ -13,7 +13,11 @@ main() {
   OLD_HOSTS="v1.43.173.6.29.sslip.io"
   APP=/opt/lola-sport-v1
   BACKUPS=/opt/lola-backups
-  REPO=https://github.com/kheisarkc/lola-sport/archive/refs/heads/main.tar.gz
+  OWNER_REPO=kheisarkc/lola-sport
+  STATE=/var/lib/lola-autodeploy
+  # REF: commit yang dipasang. Kosong = commit terbaru di main.
+  REF=${REF:-$(curl -fsS -m 20 "https://api.github.com/repos/$OWNER_REPO/commits/main" | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')}
+  REPO=https://github.com/$OWNER_REPO/archive/$REF.tar.gz
   CADDYFILE=/etc/caddy/Caddyfile
   STAMP=$(date +%Y%m%d-%H%M%S)
   C="docker compose --env-file deploy/vps/.env -f deploy/vps/compose.yml"
@@ -28,7 +32,7 @@ main() {
     chmod 600 "$BACKUPS"/* || true
   fi
 
-  echo "== Ambil source v1"
+  echo "== Ambil source v1 (commit ${REF:0:7})"
   NEW=$(mktemp -d)
   curl -fsSL "$REPO" | tar -xz -C "$NEW" --strip-components=1
   rsync -a --delete --exclude=/deploy/vps/.env --exclude=/deploy/vps/.seeded --exclude=/.env "$NEW/" "$APP/"
@@ -70,7 +74,17 @@ main() {
 
   sleep 5
   curl -fsS -o /dev/null -w "https://$HOST/up -> %{http_code}\n" "https://$HOST/up" || echo "HTTPS belum siap (sertifikat mungkin masih dibuat), coba buka lagi sebentar."
-  echo "SELESAI: https://$HOST"
+  echo "== Deploy otomatis (cek GitHub tiap 2 menit)"
+  mkdir -p "$STATE" && echo "$REF" > "$STATE/deployed" && rm -f "$STATE/failed"
+  chmod +x deploy/vps/autodeploy.sh
+  if ! cmp -s deploy/vps/lola-autodeploy.timer /etc/systemd/system/lola-autodeploy.timer || ! cmp -s deploy/vps/lola-autodeploy.service /etc/systemd/system/lola-autodeploy.service; then
+    cp deploy/vps/lola-autodeploy.service deploy/vps/lola-autodeploy.timer /etc/systemd/system/
+    systemctl daemon-reload
+  fi
+  systemctl enable --now lola-autodeploy.timer >/dev/null
+  echo "Timer aktif. Log: journalctl -u lola-autodeploy -n 50"
+
+  echo "SELESAI: https://$HOST (commit ${REF:0:7})"
 }
 
 main "$@" </dev/null

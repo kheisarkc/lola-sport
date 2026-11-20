@@ -1,0 +1,10 @@
+[Unit]
+Description=Cek commit baru Lola Sport v1 tiap 2 menit
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

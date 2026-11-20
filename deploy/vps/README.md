@@ -26,6 +26,17 @@ Versi ini **tidak menggantikan** demo lama. Project Compose `lola-sport-v1`, por
 jadi demo lama (`lola-sport-hosted-demo`, port 3001/8001/55433) tetap jalan. Pakai hostname lain, misalnya `lolasport.<ip>.sslip.io`.
 Jangan menghentikan atau mengosongkan container dan database demo lama dari folder ini.
 
+## Deploy otomatis
+
+Setelah `install.sh` dijalankan sekali, timer systemd `lola-autodeploy` mengecek GitHub tiap 2 menit.
+Commit baru di `main` dipasang otomatis **hanya kalau tes GitHub Actions untuk commit itu lolos**; kalau gagal, web tetap di versi terakhir.
+Server yang menarik dari GitHub, jadi tidak ada kunci SSH VPS yang disimpan di GitHub. Database dibackup sebelum tiap pemasangan.
+
+- Lihat apa yang terjadi: `journalctl -u lola-autodeploy -n 50`
+- Commit yang sedang live: `cat /var/lib/lola-autodeploy/deployed`
+- Pasang sekarang tanpa menunggu: `sudo systemctl start lola-autodeploy`
+- Matikan sementara: `sudo systemctl disable --now lola-autodeploy.timer` (aktifkan lagi dengan `enable --now`)
+
 ## Operasional
 
 - Lihat status: `docker compose --env-file deploy/vps/.env -f deploy/vps/compose.yml ps` dan `logs --tail=50 app`.

@@ -1,0 +1,9 @@
+[Unit]
+Description=Lola Sport v1: pasang commit main terbaru yang lolos tes
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/lola-sport-v1/deploy/vps/autodeploy.sh
+TimeoutStartSec=20min

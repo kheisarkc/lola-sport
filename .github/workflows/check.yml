@@ -1,0 +1,64 @@
+name: Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: lola
+          POSTGRES_PASSWORD: testing-only
+          POSTGRES_DB: lola_demo
+        ports:
+          - 55433:5432
+        options: >-
+          --health-cmd "pg_isready -U lola -d lola_demo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      LOLA_DATABASE_EXTERNAL: '1'
+      PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, mbstring, dom, curl, xml, fileinfo
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci
+      - name: Siapkan .env dan database tes
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=testing-only/' .env
+          php artisan key:generate --no-interaction
+          psql -h 127.0.0.1 -p 55433 -U lola -d lola_demo -c 'CREATE DATABASE lola_demo_test;'
+        env:
+          PGPASSWORD: testing-only
+      - run: npm run check
+      - name: Tes browser
+        run: |
+          node node_modules/@playwright/test/cli.js install --with-deps chromium
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failure-evidence
+          path: |
+            playwright-report/
+            test-results/

@@ -1,0 +1,42 @@
+# Berjalan berdampingan dengan demo Next.js lama: nama project, port, dan volume sengaja berbeda.
+name: lola-sport-v1
+services:
+  db:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    network_mode: host
+    command: ["postgres", "-p", "55443", "-c", "listen_addresses=127.0.0.1"]
+    environment:
+      POSTGRES_DB: lola_demo
+      POSTGRES_USER: lola
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Isi DB_PASSWORD di .env server}
+    volumes:
+      - database:/var/lib/postgresql/data
+    restart: unless-stopped
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 55443 -U lola -d lola_demo"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  app:
+    build:
+      context: ../..
+      dockerfile: deploy/vps/app.Dockerfile
+    network_mode: host
+    env_file: .env
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: "55443"
+      DB_DATABASE: lola_demo
+      DB_USERNAME: lola
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 256m
+volumes:
+  database:
+  storage:

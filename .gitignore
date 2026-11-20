@@ -1,0 +1,32 @@
+# Dependency dan hasil build
+/vendor/
+/node_modules/
+/public/build
+/public/hot
+/public/storage
+
+# Konfigurasi dan rahasia lokal
+.env
+.env.*
+!.env.example
+/storage/*.key
+
+# Runtime lokal, cache, dan laporan tes
+/.runtime/
+/.phpunit.cache/
+.phpunit.result.cache
+/playwright-report/
+/test-results/
+*.log
+
+# Editor, alat lokal, dan sistem operasi
+/.idea/
+/.vscode/
+/.claude/
+/.cursor/
+/.playwright/
+.DS_Store
+Thumbs.db
+
+# Hasil audit UI lokal
+/anti-slop/

@@ -1,0 +1,7 @@
+# Tambahkan site ini ke Caddyfile yang sudah ada; jangan hapus site lain.
+YOUR-DEMO-HOSTNAME {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8011
+    header X-Content-Type-Options nosniff
+    header Referrer-Policy strict-origin-when-cross-origin
+}
